@@ -2,7 +2,7 @@
 
 ## Probabilistic Models: A Sign Language Recognition System project using Hidden Markov Models
 
-[image1]: ./recognizer_screenshot.png "AIND-Recognizer"
+[image1]: ./recognizer_screenshot.png "AIND-Recognizer Screenshot"
 
 ### Motivation
 
