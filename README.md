@@ -1,40 +1,50 @@
 # Artificial Intelligence Engineer Nanodegree
-## Probabilistic Models
-## Project: Sign Language Recognition System
 
-### Install
+## Probabilistic Models: A Sign Language Recognition System project using Hidden Markov Models
 
-This project requires **Python 3** and the following Python libraries installed:
+[image1]: ./images/recognizer_screenshot.png "AIND-Recognizer"
 
-- [NumPy](http://www.numpy.org/)
-- [SciPy](https://www.scipy.org/)
-- [scikit-learn](http://scikit-learn.org/0.17/install.html)
-- [pandas](http://pandas.pydata.org/)
-- [matplotlib](http://matplotlib.org/)
-- [jupyter](http://ipython.org/notebook.html)
-- [hmmlearn](http://hmmlearn.readthedocs.io/en/latest/)
+### Motivation
 
-Notes: 
-1. It is highly recommended that you install the [Anaconda](http://continuum.io/downloads) distribution of Python and load the environment included in the "Your conda env for AI ND" lesson.
-2. The most recent development version of hmmlearn, 0.2.1, contains a bugfix related to the log function, which is used in this project.  In order to install this version of hmmearn, install it directly from its repo with the following command from within your activated Anaconda environment:
-```sh
-pip install git+https://github.com/hmmlearn/hmmlearn.git
-```
+The main goal of this project is to build a word recognizer for some American Sign Language video sequences using hidden Markov models using features extracted from gestural measurements taken from videos frames collected for research (see the RWTH-BOSTON-104 Database).
 
-### Code
+#### Extracting the features
 
-A template notebook is provided as `asl_recognizer.ipynb`. The notebook is a combination tutorial and submission document.  Some of the codebase and some of your implementation will be external to the notebook. For submission, complete the **Submission** sections of each part.  This will include running your implementations in code notebook cells, answering analysis questions, and passing provided unit tests provided in the codebase and called out in the notebook. 
+A data handler has been designed for this database provided as AslDb class. This module creates the pandas dataframe from the corpus and dictionaries for extracting data [hmmlearn library](https://hmmlearn.readthedocs.io/en/latest/) format-friendly. Every video frame can be expressed with an id and its features. Features are the most relevant variables that will allow us to train the model. They can be raw measurements directly taken from the video frames or derived from them like normalize each speaker's range of motion with grouped statistics using Pandas stats functions and pandas groupby. 	
 
-### Run
+#### Training the HMM Model: Finding the optimal hidden states
 
-In a terminal or command window, navigate to the top-level project directory `AIND_recognizer/` (that contains this README) and run one of the following command:
+Once extracting the features, we need to train the model but the number of optimal hidden states is unknown. The purpose the model selection is to tune the number of states for each word HMM prior to testing on unseen data. Three methods are explored: Log likelihood using cross-validation folds (CV), Bayesian Information Criterion (BIC), Discriminative Information Criterion (DIC). 
 
-`jupyter notebook asl_recognizer.ipynb`
-
-This will open the Jupyter Notebook software and notebook in your browser which is where you will directly edit and run your code. Follow the instructions in the notebook for completing the project.
+**SelectorCV** uses cross-validation using k-folds, that means that we use a subset of data for training, and another subtest, a testing dataset to validate the model. The testing dataset is not used for training, that means at the moment of model validation, this dataset has remained unseen by the model. This way, we can see how well the model is behaving generalizing data, or if there is overfitting due to an excess of complexity. The disadvantage of this method is the need additional time to preprocess the data -split and randomize the k buckets- since we need different datasets. Besides, we need a dataset big enough to generate k buckets of data. The second drawback is the performance since it uses k buckets, that means that we train the model k-1 times, and leave one bucket for testing. This process is performed k times, thus it might take longer to train and validate the model although, certainly every bucket is shorter compared to the whole dataset. Usual values are k=5 or k=10 (from AIMA book), anyway, more k-folds, more computationally expensive. Besides, a metrics for validation have to be defined [http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter], however, the problem of the metric choice is no dependent on the train-test split. In this case, we use the mean get for every bucket.
 
 
-### Additional Information
+**Bayesian Information Criterion** or **BIC** tries to minimize the resulting score. For this implementation, we use BIC = −2 log L + p log N. Both terms are straightly related to model complexity. Therefore we use this method to prevent overfitting since as more complexity added to the model, a higher penalization. The greatest advantage compared to SelectorCV or to DIC, is that we are going to find an optimal solution here, as model complexity is balanced with the accuracy obtained, and that is probably why the performance for this selector, is the best obtained.
+
+
+**Discriminative Information Criterion** or **DIC** is focused on the classification task itself. The score is obtained by getting the likelihood of a known word, compared to the mean of anti-likelihood, that is the probability of being another word, which is going to be very low. As a result, we have got a number of competing models, however, the chosen model is the one which maximizes the likelihood -the probability of being a word 'whatever', and minimizes the anti-likelihood -the probability that the word 'whatever' is not 'outside', for instance. Due to DIC works with likelihoods as well as anti-likelihoods, it performs better with a large number of states. Besides, it does not care about model complexity, thus it has the lowest performance.
+
+
+![AIND-Recognizer][image1]
+
+
+### Modules available
+
+```my_model_selectors.py```contains the SelectorCV, SelectorBIC, and SelectorDIC classes.
+
+```asl_data.py``` contains a data handler designed for this database provided as AslDb class. This module creates the pandas dataframe from the corpus and dictionaries for extracting data [hmmlearn library](https://hmmlearn.readthedocs.io/en/latest/) format-friendly. Every video frame can be expressed with an id and its features. Features are the most relevant variables that will allow us to train the model. They can be raw measurements directly taken from the video frames or derived from them like normalize each speaker's range of motion with grouped statistics using Pandas stats functions and pandas groupby. 
+
+```asl_utils.py``` provides unit tests as a sanity check on the defined feature sets. The test simply looks for some valid values.
+```asl_test_*.py``` provides unit tests for all the different components of this notebook: recognizer, model selectors, etc. 
+
+
+
+### Install environment, Test
+
+* [Install instructions](https://github.com/udacity/AIND-Recognizer)
+* [Test](http://localhost:8888/notebooks/AIND-Recognizer/asl_recognizer.ipynb)
+* [Demo](https://www.floydhub.com/nvmoyar/projects/speech-recognition)
+
 ##### Provided Raw Data
 
 The data in the `asl_recognizer/data/` directory was derived from 
