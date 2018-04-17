@@ -43,7 +43,7 @@ Finally, we get a dict with all the unique words we are going to use for trainin
 
 * [Install instructions](https://github.com/udacity/AIND-Recognizer)
 * [Test](http://localhost:8888/notebooks/AIND-Recognizer/asl_recognizer.ipynb)
-* [Demo](https://www.floydhub.com/nvmoyar/projects/speech-recognition)
+* [Demo](http://localhost:8888/notebooks/AIND-Recognizer/asl_recognizer.ipynb)
 
 #### Provided Raw Data
 
